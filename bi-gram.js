@@ -12,7 +12,7 @@ const rl = readline.createInterface({
 // moving window to hold each bi-gram (two-word seqeuence)
 const biGram = [];
 // map to hold each word and the words that follow it
-const nextWords = {};
+const biGrams = {};
 
 async function createBiGram(filePath) {
   for await (const line of rl) {
@@ -27,10 +27,10 @@ async function createBiGram(filePath) {
       biGram.push(cleanWord);
 
       if (biGram.length === 2) {
-        if (!nextWords[biGram[0]]) {
-          nextWords[biGram[0]] = [biGram[1]];
+        if (!biGrams[biGram[0]]) {
+          biGrams[biGram[0]] = [biGram[1]];
         } else {
-          nextWords[biGram[0]].push(biGram[1]);
+          biGrams[biGram[0]].push(biGram[1]);
         }
         // remove first word to maintain bi-gram window size
         biGram.shift();
@@ -38,13 +38,42 @@ async function createBiGram(filePath) {
     });
   }
 
-  return nextWords;
+  return biGrams;
 }
+
+const getNextWord = (word) => {
+  const nextWords = biGrams[word];
+  // since we didn't dedupe the values, this tends to return the most probable next word
+  const index = Math.floor(Math.random() * nextWords.length);
+  return nextWords[index];
+};
+
+const rlPrompt = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 (async () => {
   try {
     const biGrams = await createBiGram(filePath);
-    console.log(biGrams);
+
+    rlPrompt.question('Choose a single word to begin generating Borgesian text: ', (answer) => {
+      
+      const userWord = answer.trim().toLowerCase();
+
+      if (!biGrams[userWord]) {
+        console.log(`\nThe word "${userWord}" is not in the text. Please try another word.\n`);
+        return;
+      }
+    
+      console.log(`\nYou chose "${userWord}"`);
+
+      const nextWord = getNextWord(userWord);
+
+      console.log(`\nA randomly chosen next word: "${nextWord}"`);
+
+      rlPrompt.close();
+    });
   } catch (err) {
     console.error(err);
   }
