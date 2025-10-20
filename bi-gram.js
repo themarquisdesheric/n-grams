@@ -48,6 +48,26 @@ const getNextWord = (word) => {
   return nextWords[index];
 };
 
+const generateSequence = (word, length = 25) => {
+  if (!biGrams[word]) {
+    console.log(`\nThe word "${word}" is not in the text. Please try another word.`);
+    return;
+  }
+
+  console.log(`\nYou chose "${word}"`);
+
+  const sequence = [word];
+
+  for (let i = 0; i < length; i++) {
+    const nextWord = getNextWord(word);
+
+    sequence.push(nextWord);
+    word = nextWord;
+  }
+
+  console.log(`\n${sequence.join(' ')}\n`);
+}
+
 const rlPrompt = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -57,8 +77,7 @@ const rlPrompt = readline.createInterface({
   try {
     const biGrams = await createBiGram(filePath);
 
-    rlPrompt.question('Choose a single word to begin generating Borgesian text: ', (answer) => {
-      
+    rlPrompt.question('Choose a single word to begin generating Borgesian text: ', (answer) => {  
       const userWord = answer.trim().toLowerCase();
 
       if (!biGrams[userWord]) {
@@ -66,11 +85,7 @@ const rlPrompt = readline.createInterface({
         return;
       }
     
-      console.log(`\nYou chose "${userWord}"`);
-
-      const nextWord = getNextWord(userWord);
-
-      console.log(`\nA randomly chosen next word: "${nextWord}"`);
+      generateSequence(userWord);
 
       rlPrompt.close();
     });
